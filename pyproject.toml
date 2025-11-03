@@ -1,0 +1,10 @@
+[project]
+name = "image-check-agent"
+version = "0.1.0"
+description = "检测镜像站是否可用，并且推荐可用镜像"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "langchain>=1.0.3",
+    "requests>=2.32.5",
+]
