@@ -6,6 +6,7 @@ from datetime import datetime
 import time
 import random
 from pydantic import BaseModel, Field
+from langchain_core.tools import tool,ToolException
 
 # 定义工具输入模型
 class DNSCheckInput(BaseModel):
@@ -62,6 +63,7 @@ def create_dns_query(domain: str, record_type: int = 1) -> bytes:
     
     return header + qname + question
 
+@tool
 async def check_dns(input_data: DNSCheckInput) -> Dict[str, Union[bool, str, List[str]]]:
     """使用UDP Socket发送DNS查询检查指定域名
 
@@ -257,27 +259,6 @@ async def check_http_response(input_data: HTTPCheckInput) -> Dict[str, Union[boo
         }
 
 
-# 同步包装函数
-def sync_check_dns(domain: str, record_type: str = 'A', nameserver: str = '8.8.8.8'):
-    """检查域名的DNS解析（同步包装）"""
-    import asyncio
-    inp = DNSCheckInput(domain=domain, record_type=record_type, nameserver=nameserver)
-    return asyncio.run(check_dns(inp))
-
-def sync_check_port(host: str, port: int, timeout: float = 3.0):
-    """检查主机端口是否开放（同步包装）"""
-    import asyncio
-    inp = PortCheckInput(host=host, port=port, timeout=timeout)
-    return asyncio.run(check_port(inp))
-
-def sync_check_http_response(url: str, method: str = 'GET', headers: Optional[Dict[str, str]] = None,
-                             data: Optional[Dict] = None, timeout: float = 10.0, verify_ssl: bool = True):
-    """检查HTTP响应（同步包装）"""
-    import asyncio
-    inp = HTTPCheckInput(url=url, method=method, headers=headers, data=data, timeout=timeout, verify_ssl=verify_ssl)
-    return asyncio.run(check_http_response(inp))
-
-
 # 使用示例
 if __name__ == '__main__':
     import asyncio
@@ -300,7 +281,7 @@ if __name__ == '__main__':
         )
         
         # 异步调用工具函数
-        dns_result = await check_dns(dns_input)
+        dns_result = await check_dns.ainvoke(input={"input_data":dns_input})
         print("DNS Check Result:", dns_result)
         
         port_result = await check_port(port_input)
@@ -309,20 +290,5 @@ if __name__ == '__main__':
         http_result = await check_http_response(http_input)
         print("HTTP Check Result:", http_result)
     
-    def run_sync_tests():
-        """运行同步测试示例"""
-        print("\n--- Testing sync wrappers ---")
-        sync_dns_result = sync_check_dns('baidu.com')
-        print("Sync DNS Check Result:", sync_dns_result)
-        
-        sync_port_result = sync_check_port('baidu.com', 80)
-        print("Sync Port Check Result:", sync_port_result)
-        
-        sync_http_result = sync_check_http_response('https://httpbin.org/get')
-        print("Sync HTTP Check Result:", sync_http_result)
-    
     # 运行异步测试
     asyncio.run(run_async_tests())
-    
-    # 运行同步测试
-    run_sync_tests()
