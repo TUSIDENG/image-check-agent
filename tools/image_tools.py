@@ -70,17 +70,19 @@ def _check_image_manifest_sync(image_name: str, registry: Optional[str], timeout
     
     # 1. 获取认证 token (对于 Docker Hub 公共镜像，通常需要先获取 token)
     # 注意：对于非 Docker Hub 注册表，认证流程可能不同，这里仅实现 Docker Hub 兼容的公共访问
-    is_docker_hub_or_mirror = (registry_host == 'registry-1.docker.io' or
-                               registry_host.endswith('docker.io') or
-                               'daocloud.io' in registry_host)
+    # 检查是否是 Docker Hub 官方注册表
+    is_docker_hub_official = (registry_host == 'registry-1.docker.io' or registry_host == 'docker.io')
+    
+    # 检查是否是 Docker Hub 镜像加速器 (假设所有包含 daocloud.io 的都是镜像)
+    is_mirror = ('daocloud.io' in registry_host)
                                
     token = None
     
     start_time = time.time()
     
     try:
-        if is_docker_hub_or_mirror:
-            # 对于 Docker Hub 及其镜像，认证仍需指向 Docker Hub 官方认证服务
+        if is_docker_hub_official and not is_mirror:
+            # 仅对官方 Docker Hub 尝试获取 token
             token_url = f"https://auth.docker.io/token?service=registry.docker.io&scope=repository:{repository}:pull"
             
             # 尝试获取 token
