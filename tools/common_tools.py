@@ -162,6 +162,7 @@ async def check_dns(input_data: DNSCheckInput) -> Dict[str, Union[bool, str, Lis
             'error': str(e)
         }
 
+@tool
 async def check_port(input_data: PortCheckInput) -> Dict[str, Union[bool, str, float]]:
     """使用TCP连接检查指定主机端口是否开放
 
@@ -205,6 +206,7 @@ async def check_port(input_data: PortCheckInput) -> Dict[str, Union[bool, str, f
             'error': str(e)
         }
 
+@tool
 async def check_http_response(input_data: HTTPCheckInput) -> Dict[str, Union[bool, str, float, int]]:
     """检查HTTP服务的可用性和响应状态
 
@@ -284,10 +286,10 @@ if __name__ == '__main__':
         dns_result = await check_dns.ainvoke(input={"input_data":dns_input})
         print("DNS Check Result:", dns_result)
         
-        port_result = await check_port(port_input)
+        port_result = await check_port.ainvoke(input={"input_data":port_input})
         print("Port Check Result:", port_result)
         
-        http_result = await check_http_response(http_input)
+        http_result = await check_http_response.ainvoke(input={"input_data":http_input})
         print("HTTP Check Result:", http_result)
     
     # 运行异步测试
